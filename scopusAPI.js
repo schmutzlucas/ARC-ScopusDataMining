@@ -14,10 +14,7 @@ import {writeToFile} from "./readWriteFile.js";
 import fetch from "node-fetch";
 
 
-const apiKeys = [
-    '6c5874ca0af03eea96af105221f99625',
-    '6bb5f3f175ae62472ba8143341a05b3e',
-    '6ab3c2a01c29f0e36b00c8fa1d013f83'];
+const apiKeys = ['6ab3c2a01c29f0e36b00c8fa1d013f83'];
 const waitInterval = 333 / apiKeys.length;
 
 var apiKeyIndex = 0;
