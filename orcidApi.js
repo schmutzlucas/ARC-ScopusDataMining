@@ -1,12 +1,12 @@
 /**
- * These functions take as argument the formatted data from formatArcData and adds the orcid of the first returned results
- * to each author. This creates wrong orcid for common name that are caught with scopus.
+ * These functions add the orcid of the first returned results to each author. This may create errors for common names
+ * where the first results is not the desired author. Mitigation measures are implemented in the scopusAPI functions.
  */
 
 import fetch from "node-fetch";
 
 /**
- *
+ * Adds the ORCID to each author
  * @param data
  * @returns {Promise<void>}
  */
@@ -18,9 +18,9 @@ async function addORCID(data) {
 }
 
 /**
- *
- * @param leadInvestigator
- * @returns {Promise<*>}
+ * ORCID API call
+ * @param leadInvestigator name of the lead investigator
+ * @returns {Promise<*>} ORCID of the first result
  */
 async function orcidApiCall(leadInvestigator) {
     let baseUrl = 'https://pub.orcid.org/v3.0/search/?q=';
