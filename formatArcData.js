@@ -3,11 +3,10 @@
  * https://dataportal.arc.gov.au/NCGP/Web/Grant/Grants
  */
 
-// Creates the structure used to store grants informations
 /**
- *
- * @param data
- * @returns {{}}
+ * Creates an object that stores the relevant grant information found in the ARC json
+ * @param data 
+ * @returns {{}} 
  */
 function createGrantObj(data) {
     let grant = {};
@@ -21,11 +20,11 @@ function createGrantObj(data) {
     return grant;
 }
 
-// Split the names of the lead investigator in a stupid way, first token (title) discarded,
-// second token = first name, last token = last name
 /**
- *
- * @param lead_investigator
+ * Splits the name of the lead investigator in a stupid way, first token (title) discarded, second token = first name,
+ * last token = last name. However, this was the best way found to work with the Scopus API, and it is used only as a
+ * last resort.
+ * @param lead_investigator String containing the name of the lead investigator in the ARC data
  * @returns {{firstName: *, lastName: *}}
  */
 function splitName(lead_investigator) {
@@ -35,10 +34,10 @@ function splitName(lead_investigator) {
     return {firstName, lastName};
 }
 
-// Creates a name readable by the ORCID api
 /**
- *
- * @param lead_investigator
+ * Rearranges the string containing the name of the lead investigator to discard the title and replace spaces with %20
+ * to be used in the ORCID API.
+ * @param lead_investigator String containing the name of the lead investigator in the ARC data
  * @returns {string}
  */
 function noTitleName(lead_investigator) {
@@ -47,14 +46,19 @@ function noTitleName(lead_investigator) {
     return lead_investigator_array.join('%20');
 }
 
-// Reformats the arc data by author/lead-investigator
+/**
+ * Reformats the arc data by author/lead-investigator
+ * @param jsons takes as input the json obtained from the ARC database
+ * @returns {{authors: *[]}} a json organized by lead investigator name, where each investigator can have multiple grants.
+ */
 function formatArcData(jsons) {
     try {
         const data = {
             authors: []
-        };
+            };
 
         let map = new Map();
+        // loops through each grant
         for (const i in jsons.data) {
             let lead_investigator = jsons.data[i].attributes['lead-investigator'];
             let tabName = splitName(lead_investigator);
@@ -66,31 +70,29 @@ function formatArcData(jsons) {
 
             let grantTab = [];
 
+            // controls if the map has already the lead investigator, if not creates a new object
             if (!map.has(lead_investigator)) {
                 map.set(lead_investigator,
                     {
                         firstName: firstName,
                         lastName: lastName,
                         nbGrants: 1,
-                        scheme: jsons.data[i].attributes['scheme-name'],
                         grants: [grant]
                     });
-            } else {
+            } else { // adds the new grants to the lead investigator grant object
                 const investigator = map.get(lead_investigator);
                 grantTab = investigator.grants;
                 grantTab.push(grant);
 
                 map.set(lead_investigator,
                     {
-                        firstName: firstName,
-                        lastName: lastName,
                         nbGrants: investigator.nbGrants + 1,
-                        scheme: investigator.scheme,
                         grants: grantTab
                     });
             }
         }
 
+        // Creates a json from the map
         for (const [key, value] of map) {
             data.authors.push({
                 'lead-investigator': key,
@@ -108,9 +110,9 @@ function formatArcData(jsons) {
     }
 }
 
-// Sums the funding of each author
+
 /**
- *
+ * Sums the funding for each author
  * @param data
  */
 function sumFunding(data) {
