@@ -98,7 +98,6 @@ function formatArcData(jsons) {
                 'lead-investigator': key,
                 'firstName': value.firstName,
                 'lastName': value.lastName,
-                'scheme': value.scheme,
                 'nbGrants': value.nbGrants,
                 'grants': value.grants
             });
