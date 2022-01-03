@@ -1,3 +1,11 @@
+/**
+ * This program can be used to reformat Grants data obtained from the Australian Research council data portal
+ * https://dataportal.arc.gov.au/NCGP/Web/Grant/Grants. It creates a new json files where the grants are organized by
+ * lead investigator instead of by grants. Moreover, it retrieves the metrics from the corresponding lead investigator
+ * from Scopus using the Scopus Author API. For this step, it requires a Scopus API access and at least one Scopus API
+ * key (https://dev.elsevier.com/).
+ */
+
 import {read, writeToFile} from './readWriteFile.js';
 import {addORCID} from './orcidApi.js';
 import {formatArcData, sumFunding} from './formatArcData.js'
@@ -8,23 +16,21 @@ import promptSync from 'prompt-sync';
 // To get input from console
 const prompt = promptSync();
 
-
 async function main() {
+    // removes old results if present
     if (fs.existsSync('./results')) {
         fs.rmSync('./results', {recursive: true});
     }
+    // Asks the user for the filename of the ARC data, needs to be stored in ./data/
     const filename = prompt("Enter filename: ");
     console.log("Received filename.");
-
-    const apiKey = "6c5874ca0af03eea96af105221f99625";
-
 
     // Since this is a small project, only one verification is used here.
     // To reinforce the application, please add more verifications.
     if (filename !== "") {
         console.log("Reading file...");
         let json = read("./data/" + filename);
-        let data = formatArcData(json);                       //return data authors object
+        let data = formatArcData(json);
         sumFunding(data);
         console.log(data);
         writeToFile('grantsbyauth', data)
@@ -37,4 +43,3 @@ async function main() {
 }
 
 await main();
-
