@@ -31,7 +31,7 @@ async function addMetrics(data) {
     for (const i in data.authors) {
         let metrics = await scopusApiCalls(data.authors[i]);
         console.log('Metrics: ' + i + ' of ' + data.authors.length);
-        if (i % 100 == 0) {
+        if (i % 100 === 0) {
             writeToFile('save' + i, data);
         }
         if (metrics.hasOwnProperty('hIndex') && metrics.hasOwnProperty('documentCount')) {
