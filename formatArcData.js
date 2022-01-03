@@ -112,7 +112,7 @@ function formatArcData(jsons) {
 
 
 /**
- * Sums the funding for each author
+ * Sums the funding for each author and adds it as a new key:value pair
  * @param data
  */
 function sumFunding(data) {
