@@ -50,6 +50,7 @@ function writeToFile(filename, data) {
  * removes null elements that are created when we discard author with no metrics.
  * @param data
  */
+/*
 function removeNullElement (data){
     let tmp = [];
     for (const i in data.authors){
@@ -59,6 +60,13 @@ function removeNullElement (data){
     }
     data.authors = tmp;
 }
+*/
+
+function removeNullElement (data) {
+    if(data.authors)
+    data.authors = Array.from(data.authors).filter(e=>e);
+}
+
 
 export {
     read,
