@@ -12,33 +12,43 @@
 import {writeToFile} from "./readWriteFile.js";
 import fetch from "node-fetch";
 
-const apiKeys = [
-    '6c5874ca0af03eea96af105221f99625',
+/*     '6c5874ca0af03eea96af105221f99625',
     '6bb5f3f175ae62472ba8143341a05b3e',
-    '6ab3c2a01c29f0e36b00c8fa1d013f83'];
-const waitInterval = 333 / apiKeys.length;
+    '6ab3c2a01c29f0e36b00c8fa1d013f83',
+
+ */
+var apiKeys = [/*put api keys here*/];
+
+var waitDic={};
+
+for (const  key in apiKeys){
+    waitDic[key]=new Promise(r => setTimeout(r, 0));
+}
+const waitInterval = 400;
 
 var apiKeyIndex = 0;
 var wait = new Promise(r => setTimeout(r, waitInterval));
 
 /**
- * This function makes the API calls, store intermediary results to files, controls the quality of the {metrics}
- * and adds the metrics to the corresponding author profile.
+ * This function makes the API calls, controls the quality of the {metrics} and adds the metrics to the corresponding author profile.
  * @param data formatted in the previous steps
  * @returns {Promise<void>}
  */
 async function addMetrics(data) {
-    for (const i in data.authors) {
-        let metrics = await scopusApiCalls(data.authors[i]);
-        console.log('Metrics: ' + i + ' of ' + data.authors.length);
-        if (i % 100 === 0) {
-            writeToFile('save' + i, data);
+    const delta = 50;
+    for (let i=-delta; i<data.authors.length; i++){
+        if(i+delta <data.authors.length){
+            data.authors[i+delta].metrics= await scopusApiCalls(data.authors[i+delta]);
         }
-        if (metrics.hasOwnProperty('hIndex') && metrics.hasOwnProperty('documentCount')) {
-            data.authors[i].metrics = metrics;
-        } else {
-            writeToFile('error', data.authors[i]);
-            delete data.authors[i];
+        if (i>=0){
+            let metrics = await data.authors[i].metrics;
+            console.log('Metrics: ' + (i+1) + ' of ' + data.authors.length);
+            if (metrics.hasOwnProperty('hIndex') && metrics.hasOwnProperty('documentCount')) {
+                data.authors[i].metrics = metrics;
+            } else {
+                writeToFile('error', data.authors[i]);
+                data.authors[i] = null;
+            }
         }
     }
 }
@@ -60,10 +70,13 @@ function checkAustralian(dump) {
 async function scopusApiCalls(author) {
     // First API call
     let baseUrl = 'https://api.elsevier.com/content/author?orcid=';
-    let scopusUrl = baseUrl + author.orcid + '&apikey=' + apiKeys[apiKeyIndex++ % apiKeys.length];
-    await wait;
-    let response = await fetch(scopusUrl, {method: 'GET', headers: {Accept: 'application/json'}});
-    wait = new Promise(r => setTimeout(r, waitInterval));
+    let localKey = apiKeys.shift();
+    let scopusUrl = baseUrl + author.orcid + '&apikey=' + localKey;
+    await waitDic[localKey];
+    let future = fetch(scopusUrl, {method: 'GET', headers: {Accept: 'application/json'}});
+    waitDic[localKey] = new Promise(r => setTimeout(r, waitInterval));
+    apiKeys.push(localKey);
+    let response = await future;
     // Organization of the metrics and second API call
     let metrics = {};
     if (response.ok) {
@@ -76,11 +89,14 @@ async function scopusApiCalls(author) {
             metrics.publicationStart = Number(authorData['author-profile']['publication-range']['@start']);
             metrics.publicationEnd = Number(authorData['author-profile']['publication-range']['@end']);
 
+            let localKey = apiKeys.shift();
             baseUrl = 'https://api.elsevier.com/content/author?view=metrics&orcid=';
-            scopusUrl = baseUrl + author.orcid + '&apikey=' + apiKeys[apiKeyIndex++ % apiKeys.length];
-            await wait;
-            response = await fetch(scopusUrl, {method: 'GET', headers: {Accept: 'application/json'}});
-            wait = new Promise(r => setTimeout(r, waitInterval));
+            scopusUrl = baseUrl + author.orcid + '&apikey=' + localKey;
+            await waitDic[localKey];
+            future = fetch(scopusUrl, {method: 'GET', headers: {Accept: 'application/json'}});
+            waitDic[localKey] = new Promise(r => setTimeout(r, waitInterval));
+            apiKeys.push(localKey);
+            let response = await future;
             dump = await response.json();
             authorData = dump['author-retrieval-response'][0];
             metrics.hIndex = Number(authorData['h-index']);
@@ -102,11 +118,14 @@ async function scopusApiCalls(author) {
 async function scopusEidApiCall(author) {
     // First API call by first name and last name to retrieve eid
     let baseUrl = 'http://api.elsevier.com/content/search/author?apikey=';
-    let scopusUrl = baseUrl + apiKeys[apiKeyIndex++ % apiKeys.length] + '&query=AUTHFIRST%28'
+    let localKey = apiKeys.shift();
+    let scopusUrl = baseUrl + localKey + '&query=AUTHFIRST%28'
         + author.firstName + '%29+AND+AUTHLASTNAME%28' + author.lastName + '%29';
-    await wait;
-    let response = await fetch(scopusUrl, {method: 'GET', headers: {Accept: 'application/json'}});
-    wait = new Promise(r => setTimeout(r, waitInterval));
+    await waitDic[localKey];
+    let future = fetch(scopusUrl, {method: 'GET', headers: {Accept: 'application/json'}});
+    waitDic[localKey] = new Promise(r => setTimeout(r, waitInterval));
+    apiKeys.push(localKey);
+    let response = await future;
     let dump = await response.json();
     let eid = dump['search-results'].entry[0].eid
 
@@ -128,11 +147,14 @@ async function scopusEidApiCall(author) {
             metrics.publicationStart = Number(authorData['author-profile']['publication-range']['@start']);
             metrics.publicationEnd = Number(authorData['author-profile']['publication-range']['@end']);
 
+            let localKey = apiKeys.shift();
             baseUrl = 'https://api.elsevier.com/content/author?view=metrics&eid=';
             scopusUrl = baseUrl + eid + '&apikey=' + apiKeys[apiKeyIndex++ % apiKeys.length];
-            await wait;
-            response = await fetch(scopusUrl, {method: 'GET', headers: {Accept: 'application/json'}});
-            wait = new Promise(r => setTimeout(r, waitInterval));
+            await waitDic[localKey];
+            future = fetch(scopusUrl, {method: 'GET', headers: {Accept: 'application/json'}});
+            waitDic[localKey] = new Promise(r => setTimeout(r, waitInterval));
+            apiKeys.push(localKey);
+            let response = await future;
             dump = await response.json();
             authorData = dump['author-retrieval-response'][0];
             metrics.hIndex = Number(authorData['h-index']);
