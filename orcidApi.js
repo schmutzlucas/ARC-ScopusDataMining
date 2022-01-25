@@ -11,9 +11,16 @@ import fetch from "node-fetch";
  * @returns {Promise<void>}
  */
 async function addORCID(data) {
-    for (const i in data.authors) {
-        data.authors[i].orcid = await orcidApiCall(data.authors[i]['lead-investigator']);
-        console.log('orcid: ' + i + ' of ' + data.authors.length);
+    const delta =75;
+    for (let i=-delta; i<data.authors.length; i++){
+        if (i>=0){
+            data.authors[i].orcid = await data.authors[i].orcid;
+            let counter = Number(i)+1;
+            console.log('orcid: ' + counter + ' of ' + data.authors.length);
+        }
+        if(i+delta <data.authors.length){
+            data.authors[i+delta].orcid = orcidApiCall(data.authors[i+delta]['lead-investigator']);
+        }
     }
 }
 
