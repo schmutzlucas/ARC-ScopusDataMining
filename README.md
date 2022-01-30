@@ -5,8 +5,8 @@ It creates a new json file where the grants are organized by lead investigator i
 # Installation
 You first need to install node.js on your computer. Source-code and installers avaiable here: https://nodejs.org/en/download/
 
-Use the following command in a terminal to install the program:  
-_This command will install all dependencies_  
+
+Then clone this repository to your computer and use the following command in a terminal to install the program:   
 ```node
 npm install
 ```
