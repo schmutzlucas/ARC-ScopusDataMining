@@ -10,10 +10,13 @@ _This command will install all dependencies_
 ```node
 npm install
 ```
-And this one to start it: 
+# Usage
+Use : 
 ```node
 npm start
 ```
+to start the program. Then type the name of the file you want to use. 
+
 The data that will be converted should be put in ```data``` folder. After you start the program you will be ask to type the file name into the console (with extension). 
 
 The results are stored in ```results```. 
